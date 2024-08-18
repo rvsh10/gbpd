@@ -5,8 +5,6 @@
 
 #include <unordered_set>
 #include <unordered_map>
-#include <fstream>
-
 
 using json = nlohmann::json;
 
@@ -17,7 +15,13 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     return size * nmemb;
 }
 
-int main() {
+json get_data(std::string first_branch, std::string second_branch) {
+    
+	
+    // json with all data
+    json data;
+    
+	
     CURL* curl;
     CURLcode res;
     std::string readBuffer;
@@ -25,6 +29,11 @@ int main() {
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
     if(curl) {
+
+	std::string api = "https://rdb.altlinux.org/api/export/branch_binary_packages/";
+
+	std::string first_branch = "p10", second_branch = "p9";
+
         // set callback function for data write
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 
@@ -32,7 +41,7 @@ int main() {
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
         // set get request
-        curl_easy_setopt(curl, CURLOPT_URL, "https://rdb.altlinux.org/api/export/branch_binary_packages/p10");
+        curl_easy_setopt(curl, CURLOPT_URL, (api + first_branch).c_str());
         
 	// exe reuquest
         res = curl_easy_perform(curl);
@@ -51,7 +60,7 @@ int main() {
 
 	readBuffer.clear();
 
-	curl_easy_setopt(curl, CURLOPT_URL, "https://rdb.altlinux.org/api/export/branch_binary_packages/p9");
+	curl_easy_setopt(curl, CURLOPT_URL, (api + second_branch).c_str());
 	res = curl_easy_perform(curl);
 
 	if (res != CURLE_OK) {
@@ -66,17 +75,14 @@ int main() {
                 std::cerr << "JSON parse error: " << e.what() << std::endl;
             
         }
-	std::cout << "All JSON data parsed\n";
-
-	json data;
 
 	// first branch (fb) & second branch (sb)  packages unique names 
 	std::unordered_set<std::string> fb_unique_names, sb_unique_names;
 
 	// maps for output packages to json
 	std::unordered_map<std::string, size_t> fb_packages, sb_packages;
-
-	int fb_packages_count = 0;	
+	
+	int fb_packages_count = 0;
 	for (const auto& package : first_branch_data["packages"]) {
 		
 		fb_unique_names.insert(package.value("name", ""));
@@ -91,21 +97,6 @@ int main() {
 		sb_packages[package.value("name", "")] =  sb_packages_count++;
 	}
 
-	std::ofstream outfile_1, outfile_2, outfile_3;
-	outfile_1.open("fb_names.txt", std::ios::out);
-	outfile_2.open("sb_names.txt", std::ios::out);
-	outfile_3.open("data.txt", std::ios::out);
-  	if (!outfile_1) {
-		std::cerr << "Error: unable to create or open file!" << std::endl;
-	}
-
-	if (!outfile_2) {
-		std::cerr << "Error: unable to create or open file!" << std::endl;
-	}
-
-	if (!outfile_3) {
-		std::cerr << "Error: unable to create or open file!" << std::endl;
-	}
 	
 	// copy of first branch packages to find unique packages
 	// in second branch
@@ -135,45 +126,22 @@ int main() {
 		}
 	}
 
+	// find packages from first branch that have higher version release than second 
 	for (const auto& name : common) {
 		auto fb_packages_version = first_branch_data["packages"][fb_packages[name]].value("version", "");	
 		auto sb_packages_version = second_branch_data["packages"][sb_packages[name]].value("version", "");
 		if (fb_packages_version > sb_packages_version) {
 			data["higher_version_release"].push_back(first_branch_data["packages"][fb_packages[name]]);
-			//std::cout << fb_packages_version << " ";
+	
 		}
-		
-	
-
 	}
-
-	std::cout << "\n";
-	
-
-	// output unique names from first branch
-	for (const auto& name : fb_unique_names) {
-		outfile_1 << name << " ";
-	}	
-	outfile_1 << "\n";
-	
-	// output unique names from second branch
-	for (const auto& name : sb_unique_names) {
-		outfile_2 << name << " ";
-	}
-	outfile_2 << "\n";
-
-	outfile_3 << data.dump(4);
-
-	outfile_1.close();
-	outfile_2.close();	
-        
 
 	// freeing up resources
         curl_easy_cleanup(curl);
     }
     curl_global_cleanup();
 
-    return 0;
+    return data;
 }
 
 
