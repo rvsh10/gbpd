@@ -20,39 +20,53 @@ int main() {
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
     if(curl) {
-        // set get request
-        curl_easy_setopt(curl, CURLOPT_URL, "https://rdb.altlinux.org/api/export/branch_binary_packages/p10?arch=i586");
-
         // set callback function for data write
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 
         // set buffer
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
-        // exe reuquest
+        // set get request
+        curl_easy_setopt(curl, CURLOPT_URL, "https://rdb.altlinux.org/api/export/branch_binary_packages/p10?arch=i586");
+        
+	// exe reuquest
         res = curl_easy_perform(curl);
 
-        if(res != CURLE_OK) {
-            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-        } else {
-            // try to parse JSON
-            try {
-                auto jsonData = json::parse(readBuffer);
-
-		std::cout << (jsonData["packages"][2].value("version", "") > 
-			jsonData["packages"][1].value("version", "")) << std::endl;	
-
-
-
-            } catch (json::parse_error& e) {
-                std::cerr << "JSON parse error: " << e.what() << std::endl;
-            }
-        }
-
+        if (res != CURLE_OK) {
+            	std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+        } 
 	
+	json first_branch_data;
+	try {
+		first_branch_data = json::parse(readBuffer);
 
+	} catch (json::parse_error& e) {
+		std::cerr << "JSON parse error: " << e.what() << std::endl;
+	}
 
-        // Освобождаем ресурсы
+	readBuffer.clear();
+
+	curl_easy_setopt(curl, CURLOPT_URL, "https://rdb.altlinux.org/api/export/branch_binary_packages/p9?arch=i586");
+	res = curl_easy_perform(curl);
+
+	if (res != CURLE_OK) {
+		std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+	}
+
+	json second_branch_data;
+	try {
+		second_branch_data = json::parse(readBuffer);
+
+	} catch (json::parse_error& e) {
+                std::cerr << "JSON parse error: " << e.what() << std::endl;
+            
+        }
+	
+	std::cout << first_branch_data["packages"][0].dump(4) << std::endl;
+	std::cout << second_branch_data["packages"][0].dump(4) << std::endl;
+		
+
+        // freeing up resources
         curl_easy_cleanup(curl);
     }
     curl_global_cleanup();
