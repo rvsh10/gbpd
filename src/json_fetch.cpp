@@ -90,23 +90,39 @@ int main() {
 	if (!outfile_2) {
 		std::cerr << "Error: unable to create or open file!" << std::endl;
 	}
-		
 
+	std::unordered_set<std::string> fbun_copy = fb_unique_names;	
+
+	// find unique packages' names 
+
+	//find packages that's in the first branch but not in the second
+	for (const auto& name : sb_unique_names) {
+		fb_unique_names.erase(name);
+	}	
+	
+	// find packages that's in the second branch but not in the first
+	for (const auto& name : fbun_copy) {
+		sb_unique_names.erase(name);
+	}
+	
+
+	// output unique names from first branch
 	for (const auto& name : fb_unique_names) {
 		outfile_1 << name << " ";
 	}	
+	outfile_1 << "\n";
 	
+	// output unique names from second branch
 	for (const auto& name : sb_unique_names) {
 		outfile_2 << name << " ";
 	}
+	outfile_2 << "\n";
+
 	outfile_1.close();
 	outfile_2.close();	
+        
 
-	//std::cout << first_branch_data["packages"][0].dump(4) << std::endl;
-	//std::cout << second_branch_data["packages"][0].dump(4) << std::endl;
-		
-
-        // freeing up resources
+	// freeing up resources
         curl_easy_cleanup(curl);
     }
     curl_global_cleanup();
