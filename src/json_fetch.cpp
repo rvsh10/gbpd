@@ -3,6 +3,10 @@
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
+#include <unordered_set>
+#include <fstream>
+
+
 using json = nlohmann::json;
 
 
@@ -27,7 +31,7 @@ int main() {
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
         // set get request
-        curl_easy_setopt(curl, CURLOPT_URL, "https://rdb.altlinux.org/api/export/branch_binary_packages/p10?arch=i586");
+        curl_easy_setopt(curl, CURLOPT_URL, "https://rdb.altlinux.org/api/export/branch_binary_packages/p10");
         
 	// exe reuquest
         res = curl_easy_perform(curl);
@@ -46,7 +50,7 @@ int main() {
 
 	readBuffer.clear();
 
-	curl_easy_setopt(curl, CURLOPT_URL, "https://rdb.altlinux.org/api/export/branch_binary_packages/p9?arch=i586");
+	curl_easy_setopt(curl, CURLOPT_URL, "https://rdb.altlinux.org/api/export/branch_binary_packages/p9");
 	res = curl_easy_perform(curl);
 
 	if (res != CURLE_OK) {
@@ -61,9 +65,45 @@ int main() {
                 std::cerr << "JSON parse error: " << e.what() << std::endl;
             
         }
+	std::cout << "All JSON data parsed\n";
+
+	// first branch (fb) & second branch (sb)  packages unique names 
+	std::unordered_set<std::string> fb_unique_names, sb_unique_names;
 	
-	std::cout << first_branch_data["packages"][0].dump(4) << std::endl;
-	std::cout << second_branch_data["packages"][0].dump(4) << std::endl;
+	for (const auto& package : first_branch_data["packages"]) {
+		
+		fb_unique_names.insert(package.value("name", ""));
+
+	}
+	for (const auto& package : second_branch_data["packages"]) {
+
+		sb_unique_names.insert(package.value("name", ""));
+
+	}
+	std::ofstream outfile_1, outfile_2;
+	outfile_1.open("fb_names.txt", std::ios::out);
+	outfile_2.open("sb_names.txt", std::ios::out);
+  	if (!outfile_1) {
+		std::cerr << "Error: unable to create or open file!" << std::endl;
+	}
+
+	if (!outfile_2) {
+		std::cerr << "Error: unable to create or open file!" << std::endl;
+	}
+		
+
+	for (const auto& name : fb_unique_names) {
+		outfile_1 << name << " ";
+	}	
+	
+	for (const auto& name : sb_unique_names) {
+		outfile_2 << name << " ";
+	}
+	outfile_1.close();
+	outfile_2.close();	
+
+	//std::cout << first_branch_data["packages"][0].dump(4) << std::endl;
+	//std::cout << second_branch_data["packages"][0].dump(4) << std::endl;
 		
 
         // freeing up resources
