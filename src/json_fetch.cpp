@@ -1,8 +1,6 @@
+#include "json_fetch.h"
 #include <iostream>
-#include <string>
 #include <curl/curl.h>
-#include <nlohmann/json.hpp>
-
 #include <unordered_set>
 #include <unordered_map>
 
@@ -15,12 +13,11 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     return size * nmemb;
 }
 
-json get_data(std::string first_branch, std::string second_branch) {
+json get_data(const std::string& first_branch, const std::string& second_branch) {
     
 	
     // json with all data
     json data;
-    
 	
     CURL* curl;
     CURLcode res;

@@ -33,7 +33,7 @@ int main (int argc, char* argv[]) {
 	};	
 
 	if (branches.find(first_branch) == branches.end() 
-		|| branches.find(second_branch) != branches.end()) {
+		|| branches.find(second_branch) == branches.end()) {
 		std::cerr << "Error: invalid arguments!\n";
 		return 1;
 	}
