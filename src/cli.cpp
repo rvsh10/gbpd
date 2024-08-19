@@ -1,7 +1,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <string>
-#include "json_fetch.cpp"
+#include "json_fetch.h"
 #include <unordered_set>
 
 
