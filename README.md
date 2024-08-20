@@ -14,11 +14,11 @@ Open console and enter the following commands:
   - git clone https://github.com/rvsh10/test_task && cd test_task/src/
 
 Install shared library:
-  - sudo mv libgetbranchdata.so.1.0.0 /usr/lib/
+  - sudo mv libgdb.so.1.0.0 /usr/lib/
   - sudo ldconfig 
 
 Compile cli.cpp:
-  - g++ cli.cpp -o gbd /usr/lib/libgetbranchdata.so.1.0.0 -lcurl
+  - g++ cli.cpp -o gbd /usr/lib/libgdb.so.1.0.0 -lcurl
 
 (you can specify any other name instead of "gbd")
 
