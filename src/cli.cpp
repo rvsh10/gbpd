@@ -4,7 +4,6 @@
 #include "json_fetch.h"
 #include <unordered_set>
 
-
 int main (int argc, char* argv[]) {
 	
 	if (argc != 3) {
@@ -19,17 +18,7 @@ int main (int argc, char* argv[]) {
 		"sisyphus",
        		"p11",
         	"p10",
-        	"p9",
-        	"p8",
-        	"p7",
-        	"c10f2",
-        	"c10f1",
-       		"c9f2",
-        	"c9f1",
-        	"c8.1",
-        	"c8",
-       		"c7.1",
-        	"c7"
+        	"p9"
 	};	
 
 	if (branches.find(first_branch) == branches.end() 
