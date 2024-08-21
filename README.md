@@ -14,21 +14,21 @@ Open console and enter the following commands:
   - git clone https://github.com/rvsh10/test_task && cd test_task/src/
 
 Install shared library:
-  - sudo mv libgdb.so.1.0.0 /usr/lib/
+  - sudo mv libgbpdata.so.1.0.0 /usr/lib/
   - sudo ldconfig 
 
 Compile cli.cpp:
-  - g++ cli.cpp -o gbd /usr/lib/libgdb.so.1.0.0 -lcurl
+  - g++ cli.cpp -o gdbdata /usr/lib/libgbpdata.so.1.0.0 -lcurl
 
-(you can specify any other name instead of "gbd")
+(you can specify any other name instead of "gdbdata")
 
 Install the utility into the system:
-  - sudo mv gdb /usr/bin
+  - sudo mv gdbdata /usr/bin
 
 Usage:
 
 To use utility open console type gdb (or the name you specified) and specify arguments:
 
-gdb branch_1 branch_2
+gdbdata branch_1 branch_2
 
 
