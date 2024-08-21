@@ -122,12 +122,12 @@ json get_data(const std::string& first_branch, const std::string& second_branch)
 				const auto& fp_idx = first_branch_packages[arch][name];	
 				const auto& sp_idx = second_branch_packages[arch][name];	
 				const auto& fb_package_version = first_branch_data["packages"][fp_idx].value("version", "");
-				const auto& sb_package_version = second_branch_data["packages"][sp_idx].value("version", "");;
+				const auto& sb_package_version = second_branch_data["packages"][sp_idx].value("version", "");
 				if (fb_package_version > sb_package_version) {
 					arch_packs[arch].push_back(first_branch_data["packages"][fp_idx]);
 				}
 				
-				common_packages[arch].insert(name);;
+				common_packages[arch].insert(name);
 				first_branch_packages[arch].erase(name);
 			}
 
