@@ -13,76 +13,57 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     return size * nmemb;
 }
 
-json get_data(const std::string& first_branch, const std::string& second_branch) {
+// fetch json with pakcages from branch
+json fetch_json(std::string branch) {
     
-	
-    // json with all data
-    json data = {};
-	
-    CURL* curl;
-    CURLcode res;
-    std::string readBuffer;
+	CURL* curl;
+    	CURLcode res;
+    	std::string readBuffer;
+	json branch_data;
 
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-    curl = curl_easy_init();
-    if(curl) {
+	curl = curl_easy_init();
+    	if(curl) {
 
-	std::string api = "https://rdb.altlinux.org/api/export/branch_binary_packages/";
+		std::string api = "https://rdb.altlinux.org/api/export/branch_binary_packages/";
 
+       		// set callback function for data write
+        	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 
-        // set callback function for data write
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        	// set buffer
+        	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
 
-        // set buffer
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-
-        // set get request
-        curl_easy_setopt(curl, CURLOPT_URL, (api + first_branch).c_str());
+        	// set get request
+        	curl_easy_setopt(curl, CURLOPT_URL, (api + branch).c_str());
         
-	// exe reuquest
-        res = curl_easy_perform(curl);
+		// exe reuquest
+        	res = curl_easy_perform(curl);
 
-        if (res != CURLE_OK) {
-            	std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-        } 
+        	if (res != CURLE_OK) {
+            		std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+        	} 
 	
-	json first_branch_data;
-	try {
-		first_branch_data = json::parse(readBuffer);
+		try {
+			branch_data = json::parse(readBuffer);
 
-	} catch (json::parse_error& e) {
-		std::cerr << "JSON parse error: " << e.what() << std::endl;
+		} catch (json::parse_error& e) {
+			std::cerr << "JSON parse error: " << e.what() << std::endl;
+		}
+
+
 	}
 
-	readBuffer.clear();
+	curl_easy_cleanup(curl);
+	return branch_data;
+}
 
-	curl_easy_setopt(curl, CURLOPT_URL, (api + second_branch).c_str());
-	res = curl_easy_perform(curl);
 
-	if (res != CURLE_OK) {
-		std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-	}
+json get_data(const std::string& first_branch, const std::string& second_branch) {
+    	
+	// json with all data
+	json data = {};
 
-	json second_branch_data;
-	try {
-		second_branch_data = json::parse(readBuffer);
-
-	} catch (json::parse_error& e) {
-                std::cerr << "JSON parse error: " << e.what() << std::endl;
-            
-        }
-
-	// first branch (fb) & second branch (sb)  packages unique names 
-	std::unordered_set<std::string> fb_unique_names, sb_unique_names;
-
-	std::unordered_set<std::string> fb_archs, sb_archs;
-
-	// maps for output packages to json
-	std::unordered_map<std::string, size_t> fb_packages, sb_packages;
-	
-
-	
-	// NEW CODE
+	json first_branch_data = fetch_json(first_branch);
+	json second_branch_data = fetch_json(second_branch);
 	
 	std::unordered_map<std::string, std::unordered_map<std::string, size_t>> first_branch_packages;
 	std::unordered_map<std::string, std::unordered_map<std::string, size_t>> second_branch_packages;
@@ -91,7 +72,7 @@ json get_data(const std::string& first_branch, const std::string& second_branch)
 	int fb_data_counter = 0;
 	for (const auto& package : first_branch_data["packages"]) {
 		
-		const auto& arch = package.value("arch", "xxx");
+		const auto& arch = package.value("arch", "");
 		const auto& package_name = package.value("name", "");
 
 		first_branch_packages[arch][package_name] = fb_data_counter++;
@@ -105,8 +86,8 @@ json get_data(const std::string& first_branch, const std::string& second_branch)
 
 		second_branch_packages[arch][package_name] = sb_data_counter++;
 	}
-		
 	
+
 	// find unique packages in first branch
 	// and insert higher release version
 	for (const auto& archs_pnames_idxs : second_branch_packages) {
@@ -132,11 +113,12 @@ json get_data(const std::string& first_branch, const std::string& second_branch)
 			}
 
 		}
-
-		data["higher_version_release"].push_back(arch_packs);
+		if (!arch_packs.empty()) {
+			data["higher_version_release"].push_back(arch_packs);
+		}
 	}
 
-	
+
 	// second branch unique packages
 	for (const auto& archs_pnames_idxs : common_packages) {
 		const auto& arch = archs_pnames_idxs.first;
@@ -147,7 +129,6 @@ json get_data(const std::string& first_branch, const std::string& second_branch)
 		}
 	}
 	
-
 	
 	// insert unique second branch packages	
 	for (const auto& archs_pnames_idxs : second_branch_packages) {
@@ -159,7 +140,10 @@ json get_data(const std::string& first_branch, const std::string& second_branch)
 			const auto& idx = names_idxs.second;
 			arch_packs[arch].push_back(second_branch_data["packages"][idx]);
 		}
-		data["second_branch_unique"].push_back(arch_packs);
+
+		if (!arch_packs.empty()) {
+			data["second_branch_unique"].push_back(arch_packs);
+		}
 
 	}
 
@@ -175,14 +159,13 @@ json get_data(const std::string& first_branch, const std::string& second_branch)
 			const auto& idx = names_idxs.second;
 			arch_packs[arch].push_back(first_branch_data["packages"][idx]);
 		}
-		data["first_branch_unique"].push_back(arch_packs);
+
+		if (!arch_packs.empty()) {
+			data["first_branch_unique"].push_back(arch_packs);
+		}
 	}
 
-        curl_easy_cleanup(curl);
-    } 
-    curl_global_cleanup();
-
-    return data;
+	return data;
 }
 
 
