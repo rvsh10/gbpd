@@ -18,17 +18,17 @@ Install shared library:
   - sudo ldconfig 
 
 Compile cli.cpp:
-  - g++ cli.cpp -o gdbd /usr/lib/libgbpd.so.1.0.3 -lcurl
+  - g++ cli.cpp -o gbpd /usr/lib/libgbpd.so.1.0.3 -lcurl
 
-(you can specify any other name instead of "gdbdata")
+(you can specify any other name instead of "gbpd")
 
 Install the utility into the system:
-  - sudo mv gdbdata /usr/bin
+  - sudo mv gbpd /usr/bin
 
 Usage:
 
-To use utility open console type gdb (or the name you specified) and specify arguments:
+To use utility open console type gbpd (or the name you specified) and specify arguments:
 
-gdbdata branch_1 branch_2
+gbpd branch_1 branch_2
 
 
