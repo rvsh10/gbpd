@@ -14,11 +14,11 @@ Open console and enter the following commands:
   - git clone https://github.com/rvsh10/test_task && cd test_task/src/
 
 Install shared library:
-  - sudo mv libgbpdata.so.1.0.0 /usr/lib/
+  - sudo mv libgbpd.so.1.0.3 /usr/lib/
   - sudo ldconfig 
 
 Compile cli.cpp:
-  - g++ cli.cpp -o gdbdata /usr/lib/libgbpdata.so.1.0.0 -lcurl
+  - g++ cli.cpp -o gdbd /usr/lib/libgbpd.so.1.0.3 -lcurl
 
 (you can specify any other name instead of "gdbdata")
 
